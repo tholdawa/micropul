@@ -19,7 +19,7 @@ Array.prototype.rotate = (function() {
 })();
 
 
-var corners = {
+var corner = {
 	blank : {} ,
 	black : { micropul : 'black' },
 	white : { micropul : 'white' },
@@ -47,30 +47,10 @@ var Tile = ( function () {
 	};
 
 	Tile.prototype.adjacent = function() {
-		var adjacent = {} , nsCol , eCol , wCol , x , y;
+		var adjacent = {} ;
 		if ( this.board  && this.position )
 		{
-			x = this.position.x;
-			y = this.position.y;
-
-			nsCol = this.board[ x ];
-			eCol = this.board[ x + 1 ];
-			wCol = this.board[ x - 1 ];
-
-			if ( nsCol ) {
-				if ( nsCol[ y - 1 ] ) {
-					adjacent.n = nsCol[ y - 1 ];
-				}
-				if ( nsCol[ y + 1 ] ) {
-					adjacent.s = nsCol[ y + 1 ];
-				}
-			}
-			if ( eCol ) {
-				adjacent.e = eCol[ y ];
-			}
-			if ( wCol ) {
-				adjacent.w = wCol[ y ];
-			}
+			adjacent = this.board.adjacent( this.position.x , this.position.y );
 		}
 
 		return adjacent;
@@ -96,6 +76,31 @@ var Board = ( function() {
 
 		return this;
 	};
+
+	Board.prototype.adjacent = function( x , y ){
+		var nsCol, eCol, wCol, adjacent = {};
+
+		nsCol = this[ x ];
+		eCol = this[ x + 1 ];
+		wCol = this[ x - 1 ];
+
+		if ( nsCol ) {
+			if ( nsCol[ y - 1 ] ) {
+				adjacent.n = nsCol[ y - 1 ];
+			}
+			if ( nsCol[ y + 1 ] ) {
+				adjacent.s = nsCol[ y + 1 ];
+			}
+		}
+		if ( eCol ) {
+			adjacent.e = eCol[ y ];
+		}
+		if ( wCol ) {
+			adjacent.w = wCol[ y ];
+		}
+		return adjacent;
+	};
+
 
 	Board.prototype.insert = function( tile , x , y ) {
 		this[ x ]  = this [ x ] || {};
@@ -125,7 +130,7 @@ var Board = ( function() {
 
 	Board.prototype.checkColorRule = function( tile , x , y ){
 		var ne = {} , se = {} , sw = {} , nw = {},
-			adjacent = tile.adjacent;
+			adjacent = this.adjacent( x , y );
 
 		ne.corner = tile.corners.ne;
 		se.corner = tile.corners.se;
@@ -141,9 +146,19 @@ var Board = ( function() {
 		nw.adjacent = { n: adjacent.n && adjacent.n.corners.sw ,
 						w: adjacent.w && adjacent.w.corners.ne };
 
-		[ ne , se , sw , nw ].forEach( function( corner ) {
-
-		}.bind( this ) );
+		return [ ne , se , sw , nw ].every( function( corner ) {
+			var dir;
+			if ( corner.corner.micropul ) {
+				for ( dir in corner.adjacent ) {
+					if ( corner.adjacent[ dir ] &&
+						 corner.adjacent[ dir ].micropul &&
+						 corner.adjacent[ dir ].micropul !== corner.corner.micropul ) {
+							 return false;
+						 }
+				}
+			}
+			return true;
+		});
 
 	};
 
