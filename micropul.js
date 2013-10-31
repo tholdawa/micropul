@@ -198,13 +198,12 @@ var Board = ( function() {
 
 		var i , j , result = "" , row , tile, lower;
 
-		for ( i = this.bounds.x.min ; i < this.bounds.x.max ; ++i ) {
-			row = this[ i ];
+		for ( j = this.bounds.y.min ; j < this.bounds.y.max ; ++j ) {
 
 			for ( lower = 0 ; lower < 2 ; ++lower ) {
 
-				for ( j = this.bounds.y.min ; j < this.bounds.y.max ; ++j ) {
-					tile = row[ j ];
+				for ( i = this.bounds.x.min ; i < this.bounds.x.max ; ++i ) {
+					tile = this[ i ][ j ];
 
 					if ( tile ) {
 
