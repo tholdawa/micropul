@@ -115,11 +115,6 @@ var Board = ( function() {
 		return this[ x ]  && this[ x ][ y ];
 	};
 
-	Board.prototype.validateMove = function( tile , x , y ) {
-		return this.checkColorRule( tile , x , y ) &&
-			this.checkAttachmentRule( tile , x , y );
-	};
-
 	Board.prototype.updateBounds = function( x , y ){
 		this.bounds.x.min = Math.min( this.bounds.x.min , x );
 		this.bounds.x.max = Math.max( this.bounds.x.max , x + 1 );
@@ -128,7 +123,7 @@ var Board = ( function() {
 		this.bounds.y.max = Math.max( this.bounds.y.max , y + 1 );
 	};
 
-	Board.prototype.checkColorRule = function( tile , x , y ){
+	Board.prototype.validateMove = function( tile , x , y ){
 		var ne = {} , se = {} , sw = {} , nw = {},
 			adjacent = this.adjacent( x , y );
 
@@ -146,21 +141,95 @@ var Board = ( function() {
 		nw.adjacent = { n: adjacent.n && adjacent.n.corners.sw ,
 						w: adjacent.w && adjacent.w.corners.ne };
 
-		return [ ne , se , sw , nw ].every( function( corner ) {
-			var dir;
-			if ( corner.corner.micropul ) {
-				for ( dir in corner.adjacent ) {
-					if ( corner.adjacent[ dir ] &&
-						 corner.adjacent[ dir ].micropul &&
-						 corner.adjacent[ dir ].micropul !== corner.corner.micropul ) {
-							 return false;
-						 }
+		function checkColorRule() {
+			return [ ne , se , sw , nw ].every( function( corner ) {
+				var dir;
+				if ( corner.corner.micropul ) {
+					for ( dir in corner.adjacent ) {
+						if ( corner.adjacent[ dir ] &&
+							 corner.adjacent[ dir ].micropul &&
+							 corner.adjacent[ dir ].micropul !== corner.corner.micropul ) {
+								 return false;
+							 }
+					}
 				}
-			}
-			return true;
-		});
+				return true;
+			});
+		}
+
+		function checkAttachmentRule() {
+			return [ ne , se , sw , nw ].some( function( corner ) {
+				var dir;
+				if ( corner.corner.micropul ) {
+					for ( dir in corner.adjacent ) {
+						if ( corner.adjacent[ dir ] && corner.adjacent[ dir ].micropul ) {
+							return true;
+						}
+					}
+				}
+				return false;
+			} );
+		}
+
+		return checkColorRule() && checkAttachmentRule();
+
 
 	};
+
+	Board.prototype.toString = function() {
+		function cornerToString( corner ) {
+
+			if ( corner.micropul )
+				return corner.micropul[0];
+
+			if ( corner.catalyst ) {
+
+				if ( corner.catalyst === 1 )
+					return ".";
+
+				return ":";
+			}
+
+			if ( corner.extraTurn )
+				return "+";
+
+			return "_";
+		}
+
+		var i , j , result = "" , row , tile, lower;
+
+		for ( i = this.bounds.x.min ; i < this.bounds.x.max ; ++i ) {
+			row = this[ i ];
+
+			for ( lower = 0 ; lower < 2 ; ++lower ) {
+
+				for ( j = this.bounds.y.min ; j < this.bounds.y.max ; ++j ) {
+					tile = row[ j ];
+
+					if ( tile ) {
+
+						if (!lower ) {
+							result += cornerToString( tile.corners.nw ) +
+								cornerToString( tile.corners.ne);
+						}
+						else {
+							result += cornerToString( tile.corners.sw ) +
+								cornerToString( tile.corners.se);
+						}
+
+					}
+					else {
+						result += "  ";
+					}
+				}
+				result += "\n";
+			}
+		}
+
+		return result;
+
+	};
+
 
 
 
