@@ -23,9 +23,9 @@ var corner = {
 	blank : {} ,
 	black : { micropul : 'black' },
 	white : { micropul : 'white' },
-	one : { catalyst : 1 },
-	two : { catalyst : 2 },
-	plus : { extraTurn : 2 }
+	one : { catalyst : true , draws : 1 },
+	two : { catalyst : true , draws : 2 },
+	plus : { catalyst : true , extraTurn : true }
 };
 
 var Tile = ( function () {
@@ -184,15 +184,15 @@ var Board = ( function() {
 
 			if ( corner.catalyst ) {
 
-				if ( corner.catalyst === 1 )
-					return ".";
+				if ( corner.draws ) {
+					if ( corner.draws === 1 )
+						return ".";
 
-				return ":";
+					return ":";
+				}
+				if ( corner.extraTurn )
+					return "+";
 			}
-
-			if ( corner.extraTurn )
-				return "+";
-
 			return "_";
 		}
 
@@ -227,6 +227,64 @@ var Board = ( function() {
 
 		return result;
 
+	};
+
+	Board.prototype.activateCatalysts = function( tile , x , y ){
+		var ne = {} , se = {} , sw = {} , nw = {},
+			adjacent = this.adjacent( x , y ),
+			extraTurn = false ,
+			draws = 0 ,
+			activated = false ;
+
+		ne.corner = tile.corners.ne;
+		se.corner = tile.corners.se;
+		sw.corner = tile.corners.sw;
+		nw.corner = tile.corners.nw;
+
+		ne.adjacent = { n: adjacent.n && adjacent.n.corners.se ,
+						e: adjacent.e && adjacent.e.corners.nw };
+		se.adjacent = { s: adjacent.s && adjacent.s.corners.ne ,
+						e: adjacent.e && adjacent.e.corners.sw };
+		sw.adjacent = { s: adjacent.s && adjacent.s.corners.nw ,
+						w: adjacent.w && adjacent.w.corners.se };
+		nw.adjacent = { n: adjacent.n && adjacent.n.corners.sw ,
+						w: adjacent.w && adjacent.w.corners.ne };
+
+		[ nw , ne , se , sw ].forEach( function( corner ) {
+			if ( corner.corner.catalyst ) {
+				activated = Object.keys( corner.adjacent ).some( function( dir ) {
+					return corner.adjacent[ dir ] && corner.adjacent[ dir ].micropul;
+				});
+
+				if ( activated ) {
+					corner.corner.draws && ( draws += corner.corner.draws );
+					corner.corner.extraTurn && ( extraTurn = true );
+				}
+			}
+
+			if ( corner.corner.micropul ) {
+				Object.keys( corner.adjacent ).forEach( function( dir ) {
+					if ( corner.adjacent[ dir ] && corner.adjacent[ dir ].catalyst ) {
+						corner.adjacent[ dir ].draws && ( draws += corner.adjacent[ dir ].draws );
+						corner.adjacent[ dir ].extraTurn && ( extraTurn = true );
+					}
+				});
+			}
+		});
+
+		return ( { draws : draws , extraTurn : extraTurn } );
+	};
+
+
+
+	Board.prototype.tryMove = function( tile , x , y ) {
+		var result = {};
+		result.success = this.validateMove( tile , x , y );
+		if ( result.success ) {
+			this.insert( tile , x , y );
+			result.catalysts = this.activateCatalysts( tile , x , y );
+		}
+		return result;
 	};
 
 
