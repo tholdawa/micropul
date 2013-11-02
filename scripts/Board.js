@@ -1,70 +1,7 @@
-'use strict';
+/*global define*/
 
-Array.prototype.rotate = (function() {
-    // save references to array functions to make lookup faster
-    var push = Array.prototype.push,
-        splice = Array.prototype.splice;
+define( function() {
 
-    return function(count) {
-        var len = this.length >>> 0, // convert to uint
-            count = count >> 0; // convert to int
-
-        // convert count to value in range [0, len[
-        count = ((count % len) + len) % len;
-
-        // use splice.call() instead of this.splice() to make function generic
-        push.apply(this, splice.call(this, 0, count));
-        return this;
-    };
-})();
-
-
-var corner = {
-	blank : {} ,
-	black : { micropul : 'black' },
-	white : { micropul : 'white' },
-	one : { catalyst : true , draws : 1 },
-	two : { catalyst : true , draws : 2 },
-	plus : { catalyst : true , extraTurn : true }
-};
-
-var Tile = ( function () {
-	function Tile( corners , board ) {
-		if ( ! (this instanceof Tile) ) {
-			return new Tile( corners , board );
-		}
-		this.board = board;
-		this.corners = { ne : corners.ne , se : corners.se , sw : corners.sw , nw : corners.nw };
-		return this;
-	}
-
-	Tile.prototype.rotate = function() {
-		var tmp = this.corners.ne;
-		this.corners.ne = this.corners.se;
-		this.corners.se = this.corners.sw;
-		this.corners.sw = this.corners.nw;
-		this.corners.nw = tmp;
-	};
-
-	Tile.prototype.adjacent = function() {
-		var adjacent = {} ;
-		if ( this.board  && this.position )
-		{
-			adjacent = this.board.adjacent( this.position.x , this.position.y );
-		}
-
-		return adjacent;
-	};
-
-	Tile.prototype.toString = function() {
-		return "Tile " + this.corners + " at " + this.position.x + "," + this.position.y;
-	};
-
-	return Tile;
-
-} () );
-
-var Board = ( function() {
 	function Board() {
 		if ( ! ( this instanceof Board ) ) {
 			return new Board();
@@ -172,7 +109,6 @@ var Board = ( function() {
 		}
 
 		return checkColorRule() && checkAttachmentRule();
-
 
 	};
 
@@ -293,4 +229,5 @@ var Board = ( function() {
 
 	return Board;
 
-} () );
+
+});
