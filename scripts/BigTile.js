@@ -8,8 +8,9 @@ define( ['Tile'] , function( Tile ) {
 			rotate: function(){},
 			adjacent: Tile.adjacent,
 			toString: function() {
-				return "Big Tile" + this.bigTile + " at " + this.position.x + "," + this.position.y;
-			}
+				return "Big Tile" + this.bigTile + " at " + ( this.position && this.position.x ) + "," + ( this.position && this.position.y );
+			},
+			corners : { ne: color , se: color , sw: color , nw : color }
 		};
 	}
 

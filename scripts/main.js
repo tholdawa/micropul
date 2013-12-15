@@ -6,6 +6,8 @@ requirejs( ['Game' , 'utils'] , function( Game , utils ){
 
 	var game = Game();
 
+	window.game = game;
+
 	console.log( game.board.toString() );
 
 });

@@ -158,7 +158,9 @@ define( function() {
 					adjacent = this.adjacent( x , y ),
 					extraTurn = false ,
 					draws = 0 ,
-					activated = false ;
+					activated = false ,
+					bigCatalysts ,
+					adjacentBigCatalystActivators;
 
 				ne.corner = tile.corners.ne;
 				se.corner = tile.corners.se;
@@ -193,6 +195,39 @@ define( function() {
 								corner.adjacent[ dir ].extraTurn && ( extraTurn = true );
 							}
 						});
+					}
+				});
+
+
+				bigCatalysts = { c: tile.bigTile ? { catalyst: tile.bigTile.catalyst ,
+													 activated: [ nw , ne , se , sw ].some( function ( corner ) {
+														 return Object.keys( corner.adjacent ).some( function( dir ) {
+															 return corner.adjacent[ dir ] && corner.adjacent[ dir ].micropul;
+														 });
+													 })
+												   } : undefined ,
+								 n: adjacent.n && adjacent.n.bigTile ?
+								 { catalyst: adjacent.n.bigTile.catalyst ,
+								   activated: !!ne.corner.micropul || !!nw.corner.micropul
+								 } : undefined ,
+								 w: adjacent.w && adjacent.w.bigTile ?
+								 { catalyst: adjacent.w.bigTile.catalyst ,
+								   activated: !!nw.corner.micropul || !!sw.corner.micropul
+								 } : undefined ,
+								 s: adjacent.s && adjacent.s.bigTile ?
+								 { catalyst: adjacent.s.bigTile.catalyst ,
+								   activated: !!sw.corner.micropul || !!se.corner.micropul
+								 } : undefined ,
+								 e: adjacent.e && adjacent.e.bigTile ?
+								 { catalyst: adjacent.e.bigTile.catalyst ,
+								   activated: !!ne.corner.micropul || !!se.corner.micropul
+								 } : undefined
+							   };
+
+				Object.keys( bigCatalysts ).forEach( function ( dir ) {
+					if ( bigCatalysts[ dir ] && bigCatalysts[ dir ].activated ) {
+						bigCatalysts[ dir ].catalyst.draws && ( draws += bigCatalysts[ dir ].catalyst.draws );
+						bigCatalysts[ dir ].catalyst.extraTurn && ( extraTurn = true );
 					}
 				});
 

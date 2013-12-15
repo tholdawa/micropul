@@ -23,7 +23,7 @@ define( function() {
 				return adjacent;
 			} ,
 			toString: function() {
-				return "Tile " + this.corners + " at " + this.position.x + "," + this.position.y;
+				return "Tile " + JSON.stringify( this.corners ) + " at " + ( this.position && this.position.x ) + "," + ( this.position && this.position.y );
 			}
 		};
 	}
