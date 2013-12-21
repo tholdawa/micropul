@@ -6,6 +6,8 @@ define( function() {
 		return {
 			bounds: { x: { min: 0 , max: 0} , y: { min: 0 , max: 0} },
 
+			stones: [],
+
 			adjacent: function( x , y ){
 				var nsCol, eCol, wCol, adjacent = {};
 
@@ -243,10 +245,127 @@ define( function() {
 					result.catalysts = this.activateCatalysts( tile , x , y );
 				}
 				return result;
+			},
+
+
+			findConnected: function( x , y , corner ) {
+
+				// find recursive works in doubled space
+				function findConnectedRecursive( working , connected ) {
+					var potentiallyUnvisited = [];
+
+					working.forEach( function ( coords ) {
+
+						var adjConnected =
+								adjacentInDoubled( coords ).filter( function( adjCoords ) {
+
+									var corner = this.cornerAtDoubled( adjCoords );
+									return corner &&  corner.micropul && ( corner === origCorner );
+
+								}.bind( this ));
+
+						potentiallyUnvisited = potentiallyUnvisited.concat( adjConnected );
+
+						connected[ coords.x + ',' + coords.y ] = coords;
+
+					}.bind( this ) );
+
+					working = potentiallyUnvisited.filter( function ( coord ) {
+						return !connected[ coord.x + ',' + coord.y ];
+					} );
+
+					if ( working.length )
+						findConnectedRecursive.call( this , working , connected );
+				}
+
+				var origCorner = this.at( x , y ).corners[ corner ] ,
+					connected = {},
+					working = [ tileToDoubledCoords( { x: x , y: y , corner: corner } ) ];
+
+				findConnectedRecursive.call( this , working , connected );
+
+				return Object.keys( connected ).map(
+					function( key ) {
+						return doubledCoordsToTile( connected[ key ] );
+					});
+
+			},
+
+			validateStonePlacement: function( x , y , corner , player ) {
+				if ( ! this.at( x , y ).corners[ corner ].micropul  ) {
+					return false;
+				}
+
+				var connected = this.findConnected( x , y , corner );
+				if ( this.stones.some( function( stone ) {
+					return connected.some( function( coords ) {
+						var match = stone.coords.x === coords.x &&
+							stone.coords.y === coords.y &&
+							stone.coords.corner === coords.corner;
+						return match;
+					});
+				}) ) {
+					return false;
+				}
+
+				return true;
+			},
+
+			tryPlaceStone: function( x , y , corner , player ) {
+				var result = {};
+				result.success = this.validateStonePlacement( x , y , corner , player );
+				if ( result.success ) {
+					result.stone = { player: player, board: this , coords: { x: x , y: y , corner: corner } };
+					this.placeStone( result.stone );
+				}
+				return result;
+			} ,
+
+			placeStone: function( stone ) {
+				this.stones.push( stone );
+			},
+
+			cornerAtDoubled: function( coords ) {
+				var x = coords.x , y = coords.y ,
+					tileCoords = doubledCoordsToTile( { x: x , y: y } ),
+					tile = this.at( tileCoords.x , tileCoords.y );
+
+				return tile && tile.corners[ tileCoords.corner ];
 			}
 		};
-	};
 
+		function adjacentInDoubled( doubledCoords ) {
+			var adjacent = [];
+			[ -1 , 1 ].forEach( function ( offset ) {
+				adjacent.push( {x: doubledCoords.x + offset , y: doubledCoords.y  } );
+				adjacent.push( {x: doubledCoords.x  , y: doubledCoords.y + offset  } );
+			});
+			return adjacent;
+		}
+
+		function tileToDoubledCoords( tileCoords ) {
+			var x = tileCoords.x ,
+				y = tileCoords.y ,
+				corner = tileCoords.corner,
+				xOffset = corner[0] === 'w' ? 0 : 1 ,
+				yOffset = corner[0] === 'n' ? 0 : 1;
+
+			return { x : 2 * x + xOffset ,
+					 y : 2 * y + yOffset };
+		}
+
+		function doubledCoordsToTile( doubledCoords ) {
+			var x = Math.floor( doubledCoords.x / 2 ),
+				y = Math.floor( doubledCoords.y / 2 ) >> 0,
+				corner = "";
+
+			corner += ( doubledCoords.y % 2 === 0 ? "n" : "s" ) +
+				( doubledCoords.x % 2 === 0 ? "w" : "e" );
+
+			return { x: x , y: y , corner: corner };
+		}
+
+	};
 
 
 

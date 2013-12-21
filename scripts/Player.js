@@ -5,7 +5,8 @@ define( function(){
 		return {
 			supply: [],
 			hand: [],
-			stones: 3 ,
+			unplacedStones: 3 ,
+			placedStones: [],
 			game: game ,
 			draw: function( n ) {
 				this.supply = this.supply.concat( this.game.draw( n ) );
