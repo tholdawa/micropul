@@ -3,17 +3,18 @@
 define( function() {
 
 	function Board() {
-		return {
-			bounds: { x: { min: 0 , max: 0} , y: { min: 0 , max: 0} },
+		var bounds = { x: { min: 0 , max: 0} , y: { min: 0 , max: 0} },
+			stones = [],
+			tiles = [];
 
-			stones: [],
+		return {
 
 			adjacent: function( x , y ){
 				var nsCol, eCol, wCol, adjacent = {};
 
-				nsCol = this[ x ];
-				eCol = this[ x + 1 ];
-				wCol = this[ x - 1 ];
+				nsCol = tiles[ x ];
+				eCol = tiles[ x + 1 ];
+				wCol = tiles[ x - 1 ];
 
 				if ( nsCol ) {
 					if ( nsCol[ y - 1 ] ) {
@@ -32,22 +33,22 @@ define( function() {
 				return adjacent;
 			},
 			insert: function( tile , x , y ) {
-				this[ x ]  = this [ x ] || {};
-				this[ x ][ y ] = tile;
+				tiles[ x ]  = tiles [ x ] || {};
+				tiles[ x ][ y ] = tile;
 				tile.board = this;
 				tile.position = { x: x , y: y };
 
 				this.updateBounds( x , y );
 			},
 			at: function( x , y ) {
-				return this[ x ]  && this[ x ][ y ];
+				return tiles[ x ]  && tiles[ x ][ y ];
 			},
 			updateBounds: function( x , y ){
-				this.bounds.x.min = Math.min( this.bounds.x.min , x );
-				this.bounds.x.max = Math.max( this.bounds.x.max , x + 1 );
+				bounds.x.min = Math.min( bounds.x.min , x );
+				bounds.x.max = Math.max( bounds.x.max , x + 1 );
 
-				this.bounds.y.min = Math.min( this.bounds.y.min , y );
-				this.bounds.y.max = Math.max( this.bounds.y.max , y + 1 );
+				bounds.y.min = Math.min( bounds.y.min , y );
+				bounds.y.max = Math.max( bounds.y.max , y + 1 );
 			},
 
 			validateMove: function( tile , x , y ){
@@ -124,12 +125,12 @@ define( function() {
 
 				var i , j , result = "" , row , tile, lower;
 
-				for ( j = this.bounds.y.min ; j < this.bounds.y.max ; ++j ) {
+				for ( j = bounds.y.min ; j < bounds.y.max ; ++j ) {
 
 					for ( lower = 0 ; lower < 2 ; ++lower ) {
 
-						for ( i = this.bounds.x.min ; i < this.bounds.x.max ; ++i ) {
-							tile = this[ i ][ j ];
+						for ( i = bounds.x.min ; i < bounds.x.max ; ++i ) {
+							tile = tiles[ i ][ j ];
 
 							if ( tile ) {
 
@@ -297,7 +298,7 @@ define( function() {
 				}
 
 				var connected = this.findConnected( x , y , corner );
-				if ( this.stones.some( function( stone ) {
+				if ( stones.some( function( stone ) {
 					return connected.some( function( coords ) {
 						var match = stone.coords.x === coords.x &&
 							stone.coords.y === coords.y &&
@@ -322,7 +323,7 @@ define( function() {
 			} ,
 
 			placeStone: function( stone ) {
-				this.stones.push( stone );
+				stones.push( stone );
 			},
 
 			cornerAtDoubled: function( coords ) {
