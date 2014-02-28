@@ -1,9 +1,9 @@
 /*global define*/
 
-define( [ 'Board' , 'Player' , 'utils' , 'deck' ] , function( Board , Player , utils , deck ){
+define( [ 'Board' , 'Player' , 'utils' , 'Deck' ] , function( Board , Player , utils , Deck ){
 	function Game( numPlayers ) {
 
-		var game = { core: deck() ,
+		var game = { core: Deck() ,
 					 board: Board(),
 					 players: [],
 
